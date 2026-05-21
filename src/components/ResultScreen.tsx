@@ -1,4 +1,4 @@
-import type { AnswerRecord, QuizChallenge } from '../types'
+import type { AnswerRecord, QuizChallenge, QuizMode } from '../types'
 import { getFlagUrl } from '../utils/flagUrl'
 import { Button } from './ui/Button'
 import { Badge } from './ui/Badge'
@@ -7,6 +7,7 @@ interface ResultScreenProps {
   answers: AnswerRecord[]
   score: number
   totalQuestions: number
+  mode: QuizMode
   challenge: QuizChallenge
   onRestart: () => void
 }
@@ -26,6 +27,7 @@ export function ResultScreen({
   answers,
   score,
   totalQuestions,
+  mode,
   challenge,
   onRestart,
 }: ResultScreenProps) {
@@ -33,6 +35,7 @@ export function ResultScreen({
   const pct = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0
   const wrong = answers.filter(a => a.status === 'incorrect')
   const isSimilar = challenge === 'similar-flags'
+  const isHidden = mode === 'hidden-flag'
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-6">
@@ -53,6 +56,11 @@ export function ResultScreen({
           {isSimilar && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-800">
               Similar Flags Challenge
+            </span>
+          )}
+          {isHidden && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-slate-900 text-white">
+              Hidden Flag Challenge
             </span>
           )}
         </div>

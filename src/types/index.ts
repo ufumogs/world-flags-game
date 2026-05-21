@@ -13,9 +13,19 @@ export interface Question {
   id: string         // stable React key
 }
 
-export type QuizMode = 'name-to-flag' | 'flag-to-name'
+export type QuizMode = 'name-to-flag' | 'flag-to-name' | 'hidden-flag'
 
 export type QuizChallenge = 'standard' | 'similar-flags'
+
+export type HiddenFlagDifficulty = 'easy' | 'medium' | 'hard'
+
+export interface HiddenFlagReveal {
+  difficulty: HiddenFlagDifficulty
+  x: number
+  y: number
+  size: number
+  visibleRatio: number
+}
 
 export type SimilarityDifficulty = 'medium' | 'hard' | 'expert'
 

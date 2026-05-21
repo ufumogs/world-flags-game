@@ -29,6 +29,12 @@ const MODES: Array<{
     description: 'See a flag — name the country',
     icon: '🗺️',
   },
+  {
+    value: 'hidden-flag',
+    label: 'Hidden Flag Challenge',
+    description: 'See a tiny reveal - name the country',
+    icon: '??',
+  },
 ]
 
 const CHALLENGES: Array<{
@@ -142,6 +148,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
       <div className="space-y-2.5 mb-8">
         {MODES.map(m => {
           const active = mode === m.value
+          const isHidden = m.value === 'hidden-flag'
           return (
             <button
               key={m.value}
@@ -150,9 +157,11 @@ export function StartScreen({ onStart }: StartScreenProps) {
               className={`
                 group w-full flex items-center gap-4 p-4 rounded-2xl border-2
                 text-left transition-all duration-200
-                ${active
-                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-transparent shadow-lg shadow-blue-300/40'
-                  : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5'
+                ${active && isHidden
+                  ? 'bg-gradient-to-r from-slate-900 to-zinc-700 border-transparent shadow-lg shadow-slate-400/30'
+                  : active
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-transparent shadow-lg shadow-blue-300/40'
+                    : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5'
                 }
               `}
             >
@@ -162,8 +171,10 @@ export function StartScreen({ onStart }: StartScreenProps) {
                   w-12 h-12 rounded-xl text-2xl flex items-center justify-center shrink-0
                   transition-colors duration-200
                   ${active
-                    ? 'bg-white/20'
-                    : 'bg-slate-100 group-hover:bg-blue-50'
+                    ? 'bg-white/20 text-white'
+                    : isHidden
+                      ? 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
+                      : 'bg-slate-100 group-hover:bg-blue-50'
                   }
                 `}
                 aria-hidden="true"
@@ -188,12 +199,14 @@ export function StartScreen({ onStart }: StartScreenProps) {
                   transition-colors duration-200
                   ${active
                     ? 'border-white bg-white'
-                    : 'border-slate-300 group-hover:border-blue-400'
+                    : isHidden
+                      ? 'border-slate-300 group-hover:border-slate-600'
+                      : 'border-slate-300 group-hover:border-blue-400'
                   }
                 `}
                 aria-hidden="true"
               >
-                {active && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                {active && <div className={`w-2 h-2 rounded-full ${isHidden ? 'bg-slate-800' : 'bg-blue-500'}`} />}
               </div>
             </button>
           )

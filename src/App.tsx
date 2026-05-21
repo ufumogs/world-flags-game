@@ -63,6 +63,7 @@ export default function App() {
     play('click')
     start(config)
     setAppScreen('quiz')
+    window.scrollTo({ top: 0 })
   }
 
   // Hard navigation — clears timers and resets quiz state before switching screens.
@@ -92,6 +93,7 @@ export default function App() {
     restart()
     if (lastConfigRef.current) start(lastConfigRef.current)
     setConfirmAction(null)
+    window.scrollTo({ top: 0 })
   }
 
   // Soft restart — shows confirm if the user would lose in-progress answers.
@@ -109,6 +111,7 @@ export default function App() {
     completeSoundFiredRef.current = false
     restart()
     if (lastConfigRef.current) start(lastConfigRef.current)
+    window.scrollTo({ top: 0 })
   }
 
   function handleConfirm() {
@@ -249,6 +252,7 @@ export default function App() {
                 score={state.score}
                 answered={state.answers.length}
                 total={state.totalQuestions}
+                mode={state.mode}
                 challenge={state.challenge}
               />
             </div>
@@ -296,6 +300,8 @@ export default function App() {
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
       appScreen === 'menu'
         ? 'bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/60'
+        : state.phase === 'playing' && state.mode === 'hidden-flag'
+          ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800'
         : state.challenge === 'similar-flags'
           ? 'bg-amber-50'
         : 'bg-slate-100'
@@ -332,6 +338,7 @@ export default function App() {
             answers={state.answers}
             score={state.score}
             totalQuestions={state.totalQuestions}
+            mode={state.mode}
             challenge={state.challenge}
             onRestart={handlePlayAgain}
           />
