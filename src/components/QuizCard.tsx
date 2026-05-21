@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Question, AnswerRecord, QuizMode } from '../types'
+import type { Question, AnswerRecord, QuizChallenge, QuizMode } from '../types'
 import { getFlagUrl } from '../utils/flagUrl'
 import { FlagGrid } from './FlagGrid'
 import { NameGrid } from './NameGrid'
@@ -11,6 +11,7 @@ interface QuizCardProps {
   questionNumber: number
   totalQuestions: number
   mode: QuizMode
+  challenge: QuizChallenge
 }
 
 // ── Mode-specific prompt components ──────────────────────────────────────────
@@ -91,13 +92,28 @@ export function QuizCard({
   questionNumber,
   totalQuestions,
   mode,
+  challenge,
 }: QuizCardProps) {
   const isAnswered = answerRecord !== undefined
+  const isSimilar = challenge === 'similar-flags'
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      {isSimilar && (
+        <div className="flex justify-center mb-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-700 ring-1 ring-amber-200">
+            Similar Flags Challenge
+            <span className="rounded-full bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">
+              Hard
+            </span>
+          </span>
+        </div>
+      )}
+
       {/* Progress label */}
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest text-center mb-3">
+      <p className={`text-xs font-semibold uppercase tracking-widest text-center mb-3 ${
+        isSimilar ? 'text-amber-500' : 'text-slate-400'
+      }`}>
         Question {questionNumber} of {totalQuestions}
       </p>
 

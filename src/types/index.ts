@@ -15,6 +15,32 @@ export interface Question {
 
 export type QuizMode = 'name-to-flag' | 'flag-to-name'
 
+export type QuizChallenge = 'standard' | 'similar-flags'
+
+export type SimilarityDifficulty = 'medium' | 'hard' | 'expert'
+
+export type FlagSimilarityFeature =
+  | 'horizontal-stripes'
+  | 'vertical-stripes'
+  | 'tricolor'
+  | 'union-jack-canton'
+  | 'nordic-cross'
+  | 'pan-african-colors'
+  | 'pan-arab-colors'
+  | 'shared-emblem-layout'
+  | 'crescent-star'
+  | 'circle-disc'
+  | 'stars'
+  | 'coat-of-arms'
+
+export interface FlagSimilarityGroup {
+  id: string
+  label: string
+  difficulty: SimilarityDifficulty
+  countries: readonly string[]
+  features: readonly FlagSimilarityFeature[]
+}
+
 export type AnswerStatus = 'correct' | 'incorrect'
 
 export interface AnswerRecord {
@@ -33,6 +59,7 @@ export type AppScreen = 'menu' | 'quiz' | 'settings'
 export interface QuizState {
   phase: GamePhase
   mode: QuizMode
+  challenge: QuizChallenge
   questions: Question[]
   currentIndex: number
   answers: AnswerRecord[]
@@ -44,5 +71,6 @@ export interface QuizConfig {
   totalQuestions: number
   continents: Continent[] | 'all'
   mode: QuizMode
+  challenge: QuizChallenge
   difficulty: 'common' | 'all'
 }

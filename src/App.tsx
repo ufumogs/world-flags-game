@@ -249,6 +249,7 @@ export default function App() {
                 score={state.score}
                 answered={state.answers.length}
                 total={state.totalQuestions}
+                challenge={state.challenge}
               />
             </div>
 
@@ -295,6 +296,8 @@ export default function App() {
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
       appScreen === 'menu'
         ? 'bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/60'
+        : state.challenge === 'similar-flags'
+          ? 'bg-amber-50'
         : 'bg-slate-100'
     }`}>
       {renderHeader()}
@@ -319,6 +322,7 @@ export default function App() {
               questionNumber={state.currentIndex + 1}
               totalQuestions={state.totalQuestions}
               mode={state.mode}
+              challenge={state.challenge}
             />
           </div>
         )}
@@ -328,6 +332,7 @@ export default function App() {
             answers={state.answers}
             score={state.score}
             totalQuestions={state.totalQuestions}
+            challenge={state.challenge}
             onRestart={handlePlayAgain}
           />
         )}

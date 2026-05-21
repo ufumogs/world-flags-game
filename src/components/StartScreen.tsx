@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Continent, QuizConfig, QuizMode } from '../types'
+import type { Continent, QuizChallenge, QuizConfig, QuizMode } from '../types'
 import rawCountries from '../data/countries.json'
 import type { Country } from '../types'
 
@@ -28,6 +28,25 @@ const MODES: Array<{
     label: 'Guess the Country',
     description: 'See a flag — name the country',
     icon: '🗺️',
+  },
+]
+
+const CHALLENGES: Array<{
+  value: QuizChallenge
+  label: string
+  description: string
+  badge?: string
+}> = [
+  {
+    value: 'standard',
+    label: 'Classic Mix',
+    description: 'Answer choices come from the selected regions',
+  },
+  {
+    value: 'similar-flags',
+    label: 'Similar Flags Challenge',
+    description: 'Distractors are picked from lookalike flag groups first',
+    badge: 'Hard',
   },
 ]
 
@@ -64,6 +83,7 @@ function getAvailableCounts(poolSize: number): Array<{ value: number; label: str
 
 export function StartScreen({ onStart }: StartScreenProps) {
   const [mode, setMode]           = useState<QuizMode>('name-to-flag')
+  const [challenge, setChallenge] = useState<QuizChallenge>('standard')
   const [continent, setContinent] = useState<Continent | 'all'>('all')
   const [count, setCount]         = useState<number>(20)
 
@@ -85,6 +105,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
       totalQuestions: effectiveCount,
       continents: continent === 'all' ? 'all' : [continent],
       mode,
+      challenge,
       difficulty: 'all',
     })
   }
@@ -180,6 +201,79 @@ export function StartScreen({ onStart }: StartScreenProps) {
       </div>
 
       {/* ── Continent picker ─────────────────────────────────────────────────── */}
+      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+        Challenge style
+      </p>
+      <div className="space-y-2.5 mb-8">
+        {CHALLENGES.map(item => {
+          const active = challenge === item.value
+          const isSimilar = item.value === 'similar-flags'
+          return (
+            <button
+              key={item.value}
+              onClick={() => setChallenge(item.value)}
+              aria-pressed={active}
+              className={`
+                group w-full flex items-center gap-4 p-4 rounded-2xl border-2
+                text-left transition-all duration-200
+                ${active && isSimilar
+                  ? 'bg-gradient-to-r from-amber-500 to-rose-600 border-transparent shadow-lg shadow-amber-300/40'
+                  : active
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-transparent shadow-lg shadow-blue-300/40'
+                    : 'bg-white border-slate-200 hover:border-amber-300 hover:shadow-md hover:-translate-y-0.5'
+                }
+              `}
+            >
+              <div
+                className={`
+                  w-12 h-12 rounded-xl text-sm font-black flex items-center justify-center shrink-0
+                  transition-colors duration-200
+                  ${active
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-100 text-slate-500 group-hover:bg-amber-50 group-hover:text-amber-700'
+                  }
+                `}
+                aria-hidden="true"
+              >
+                VS
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className={`font-extrabold text-sm leading-none ${active ? 'text-white' : 'text-slate-800'}`}>
+                    {item.label}
+                  </p>
+                  {item.badge && (
+                    <span className={`text-[10px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
+                      active ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs leading-snug ${active ? 'text-white/85' : 'text-slate-500'}`}>
+                  {item.description}
+                </p>
+              </div>
+
+              <div
+                className={`
+                  w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center
+                  transition-colors duration-200
+                  ${active
+                    ? 'border-white bg-white'
+                    : 'border-slate-300 group-hover:border-amber-400'
+                  }
+                `}
+                aria-hidden="true"
+              >
+                {active && <div className={`w-2 h-2 rounded-full ${isSimilar ? 'bg-amber-500' : 'bg-blue-500'}`} />}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
       {/* "All Regions" is full-width and visually separate from the 5 continent
           buttons below it — making the hierarchy All > Specific clear at a glance.
           Continents split into 3+2 rows: 3 in the first row, 2 wider ones in the

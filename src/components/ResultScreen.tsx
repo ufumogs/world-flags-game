@@ -1,4 +1,4 @@
-import type { AnswerRecord } from '../types'
+import type { AnswerRecord, QuizChallenge } from '../types'
 import { getFlagUrl } from '../utils/flagUrl'
 import { Button } from './ui/Button'
 import { Badge } from './ui/Badge'
@@ -7,6 +7,7 @@ interface ResultScreenProps {
   answers: AnswerRecord[]
   score: number
   totalQuestions: number
+  challenge: QuizChallenge
   onRestart: () => void
 }
 
@@ -25,11 +26,13 @@ export function ResultScreen({
   answers,
   score,
   totalQuestions,
+  challenge,
   onRestart,
 }: ResultScreenProps) {
   const { label, color } = getGrade(score, totalQuestions)
   const pct = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0
   const wrong = answers.filter(a => a.status === 'incorrect')
+  const isSimilar = challenge === 'similar-flags'
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-6">
@@ -45,7 +48,14 @@ export function ResultScreen({
         <p className="text-lg font-semibold text-slate-600 mb-3">
           {score} / {totalQuestions} correct
         </p>
-        <Badge label={label} color={color} />
+        <div className="flex flex-wrap justify-center gap-2">
+          <Badge label={label} color={color} />
+          {isSimilar && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-amber-100 text-amber-800">
+              Similar Flags Challenge
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Missed flags review */}

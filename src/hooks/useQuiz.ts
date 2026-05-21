@@ -17,6 +17,7 @@ type QuizAction =
 const initialState: QuizState = {
   phase: 'start',
   mode: 'name-to-flag',
+  challenge: 'standard',
   questions: [],
   currentIndex: 0,
   answers: [],
@@ -44,11 +45,12 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       }
 
       const count = Math.min(config.totalQuestions, pool.length)
-      const questions = buildQuiz(pool, count)
+      const questions = buildQuiz(pool, count, { challenge: config.challenge })
 
       return {
         phase: 'playing',
         mode: config.mode,
+        challenge: config.challenge,
         questions,
         currentIndex: 0,
         answers: [],
