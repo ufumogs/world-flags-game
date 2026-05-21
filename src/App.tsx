@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuiz } from './hooks/useQuiz'
+import { useTypingChallenge } from './hooks/useTypingChallenge'
 import { useSound } from './hooks/useSound'
 import { StartScreen } from './components/StartScreen'
 import { QuizCard } from './components/QuizCard'
 import { ResultScreen } from './components/ResultScreen'
+import { TypingChallengeScreen } from './components/TypingChallengeScreen'
 import { ScoreBar } from './components/ScoreBar'
 import { SoundToggle } from './components/SoundToggle'
 import { ConfirmModal } from './components/ConfirmModal'
 import { getFlagUrl } from './utils/flagUrl'
 import { TIMING } from './utils/timing'
-import type { AppScreen, QuizConfig } from './types'
+import type { AppScreen, QuizConfig, TypingChallengeConfig } from './types'
 
 export default function App() {
   const { state, start, answer, next, restart } = useQuiz()
+  const typing = useTypingChallenge()
   const { enabled: soundEnabled, toggle: toggleSound, play } = useSound()
 
   // ── Top-level screen ─────────────────────────────────────────────────────────
@@ -27,6 +30,7 @@ export default function App() {
 
   // Preserves the last config so restart replays the same settings
   const lastConfigRef = useRef<QuizConfig | null>(null)
+  const lastTypingConfigRef = useRef<TypingChallengeConfig | null>(null)
 
   // ── Transition state ─────────────────────────────────────────────────────────
   // true  → wrapper fading out (opacity-0, slide up)
@@ -66,17 +70,32 @@ export default function App() {
     window.scrollTo({ top: 0 })
   }
 
+  function handleStartTyping(config: TypingChallengeConfig) {
+    lastTypingConfigRef.current = config
+    play('click')
+    restart()
+    typing.start(config)
+    setAppScreen('typing')
+    window.scrollTo({ top: 0 })
+  }
+
   // Hard navigation — clears timers and resets quiz state before switching screens.
   function doGoToMenu() {
     clearTimers()
     setIsExiting(false)
     restart()
+    typing.restart()
     setAppScreen('menu')
     setConfirmAction(null)
   }
 
   // Soft navigation — shows confirm if the user would lose in-progress answers.
   function handleGoToMenu() {
+    if (appScreen === 'typing' && typing.state.phase === 'playing' && typing.solvedCount > 0) {
+      setConfirmAction('quit')
+      return
+    }
+
     if (state.phase === 'playing' && state.answers.length > 0) {
       setConfirmAction('quit')
       return
@@ -90,14 +109,26 @@ export default function App() {
     setIsExiting(false)
     play('click')
     completeSoundFiredRef.current = false
-    restart()
-    if (lastConfigRef.current) start(lastConfigRef.current)
+
+    if (appScreen === 'typing') {
+      typing.restart()
+      if (lastTypingConfigRef.current) typing.start(lastTypingConfigRef.current)
+    } else {
+      restart()
+      if (lastConfigRef.current) start(lastConfigRef.current)
+    }
+
     setConfirmAction(null)
     window.scrollTo({ top: 0 })
   }
 
   // Soft restart — shows confirm if the user would lose in-progress answers.
   function handleRestartClick() {
+    if (appScreen === 'typing' && typing.state.phase === 'playing' && typing.solvedCount > 0) {
+      setConfirmAction('restart')
+      return
+    }
+
     if (state.phase === 'playing' && state.answers.length > 0) {
       setConfirmAction('restart')
       return
@@ -173,6 +204,16 @@ export default function App() {
     }
   }, [state.phase, play])
 
+  useEffect(() => {
+    if (typing.state.phase === 'finished' && !completeSoundFiredRef.current) {
+      completeSoundFiredRef.current = true
+      play('complete')
+    }
+    if (typing.state.phase !== 'finished' && appScreen === 'typing') {
+      completeSoundFiredRef.current = false
+    }
+  }, [appScreen, typing.state.phase, play])
+
   // ── Preload next question's flag images ─────────────────────────────────────
   useEffect(() => {
     if (state.phase !== 'playing') return
@@ -224,6 +265,31 @@ export default function App() {
       return (
         <header className="sticky top-0 z-10">
           <div className="max-w-sm mx-auto px-4 py-3 flex justify-end">
+            <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
+          </div>
+        </header>
+      )
+    }
+
+    if (appScreen === 'typing') {
+      return (
+        <header className="bg-white border-b border-blue-100 sticky top-0 z-20 shadow-sm">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={handleGoToMenu}
+              aria-label="Back to menu"
+              className="flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+              </svg>
+              Menu
+            </button>
+            <div className="min-w-0 flex-1 text-center">
+              <p className="truncate text-sm font-black text-slate-800">
+                Flag Typing Challenge
+              </p>
+            </div>
             <SoundToggle enabled={soundEnabled} onToggle={toggleSound} />
           </div>
         </header>
@@ -300,6 +366,8 @@ export default function App() {
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${
       appScreen === 'menu'
         ? 'bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/60'
+        : appScreen === 'typing'
+          ? 'bg-slate-50'
         : state.phase === 'playing' && state.mode === 'hidden-flag'
           ? 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800'
         : state.challenge === 'similar-flags'
@@ -308,9 +376,23 @@ export default function App() {
     }`}>
       {renderHeader()}
 
-      <main className={`flex-1 flex items-start justify-center p-4 pb-12 ${appScreen === 'menu' ? 'pt-1' : 'pt-8'}`}>
+      <main className={`flex-1 flex items-start justify-center ${appScreen === 'typing' ? 'p-0 pb-12' : `p-4 pb-12 ${appScreen === 'menu' ? 'pt-1' : 'pt-8'}`}`}>
         {appScreen === 'menu' && (
-          <StartScreen onStart={handleStart} />
+          <StartScreen
+            onStartQuiz={handleStart}
+            onStartTyping={handleStartTyping}
+          />
+        )}
+
+        {appScreen === 'typing' && typing.state.countries.length > 0 && (
+          <TypingChallengeScreen
+            state={typing.state}
+            solvedCount={typing.solvedCount}
+            solvedSet={typing.solvedSet}
+            onGuess={typing.guess}
+            onSolved={() => play('correct')}
+            onRestart={handleRestartClick}
+          />
         )}
 
         {appScreen === 'quiz' && state.phase === 'playing' && state.questions.length > 0 && (

@@ -1,10 +1,17 @@
 import { useState } from 'react'
-import type { Continent, QuizChallenge, QuizConfig, QuizMode } from '../types'
+import type {
+  Continent,
+  MenuMode,
+  QuizChallenge,
+  QuizConfig,
+  TypingChallengeConfig,
+} from '../types'
 import rawCountries from '../data/countries.json'
 import type { Country } from '../types'
 
 interface StartScreenProps {
-  onStart: (config: QuizConfig) => void
+  onStartQuiz: (config: QuizConfig) => void
+  onStartTyping: (config: TypingChallengeConfig) => void
 }
 
 // ── Static config ─────────────────────────────────────────────────────────────
@@ -12,7 +19,7 @@ interface StartScreenProps {
 const allCountries = rawCountries as Country[]
 
 const MODES: Array<{
-  value: QuizMode
+  value: MenuMode
   label: string
   description: string
   icon: string
@@ -34,6 +41,12 @@ const MODES: Array<{
     label: 'Hidden Flag Challenge',
     description: 'See a tiny reveal - name the country',
     icon: '??',
+  },
+  {
+    value: 'flag-typing',
+    label: 'Flag Typing Challenge',
+    description: 'Type countries fast - solve the full board',
+    icon: '⌨',
   },
 ]
 
@@ -87,8 +100,8 @@ function getAvailableCounts(poolSize: number): Array<{ value: number; label: str
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function StartScreen({ onStart }: StartScreenProps) {
-  const [mode, setMode]           = useState<QuizMode>('name-to-flag')
+export function StartScreen({ onStartQuiz, onStartTyping }: StartScreenProps) {
+  const [mode, setMode]           = useState<MenuMode>('name-to-flag')
   const [challenge, setChallenge] = useState<QuizChallenge>('standard')
   const [continent, setContinent] = useState<Continent | 'all'>('all')
   const [count, setCount]         = useState<number>(20)
@@ -107,9 +120,20 @@ export function StartScreen({ onStart }: StartScreenProps) {
   const effectiveCount = availableCounts.find(a => a.value === count) ? count : poolSize
 
   function handleStart() {
-    onStart({
+    const continents = continent === 'all' ? 'all' : [continent]
+
+    if (mode === 'flag-typing') {
+      onStartTyping({
+        totalFlags: effectiveCount,
+        continents,
+        difficulty: 'all',
+      })
+      return
+    }
+
+    onStartQuiz({
       totalQuestions: effectiveCount,
-      continents: continent === 'all' ? 'all' : [continent],
+      continents,
       mode,
       challenge,
       difficulty: 'all',
@@ -149,6 +173,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
         {MODES.map(m => {
           const active = mode === m.value
           const isHidden = m.value === 'hidden-flag'
+          const isTyping = m.value === 'flag-typing'
           return (
             <button
               key={m.value}
@@ -157,7 +182,9 @@ export function StartScreen({ onStart }: StartScreenProps) {
               className={`
                 group w-full flex items-center gap-4 p-4 rounded-2xl border-2
                 text-left transition-all duration-200
-                ${active && isHidden
+                ${active && isTyping
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 border-transparent shadow-lg shadow-cyan-300/40'
+                  : active && isHidden
                   ? 'bg-gradient-to-r from-slate-900 to-zinc-700 border-transparent shadow-lg shadow-slate-400/30'
                   : active
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 border-transparent shadow-lg shadow-blue-300/40'
@@ -172,6 +199,8 @@ export function StartScreen({ onStart }: StartScreenProps) {
                   transition-colors duration-200
                   ${active
                     ? 'bg-white/20 text-white'
+                    : isTyping
+                      ? 'bg-cyan-50 text-cyan-700 group-hover:bg-cyan-100'
                     : isHidden
                       ? 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'
                       : 'bg-slate-100 group-hover:bg-blue-50'
@@ -199,6 +228,8 @@ export function StartScreen({ onStart }: StartScreenProps) {
                   transition-colors duration-200
                   ${active
                     ? 'border-white bg-white'
+                    : isTyping
+                      ? 'border-slate-300 group-hover:border-cyan-400'
                     : isHidden
                       ? 'border-slate-300 group-hover:border-slate-600'
                       : 'border-slate-300 group-hover:border-blue-400'
@@ -206,7 +237,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
                 `}
                 aria-hidden="true"
               >
-                {active && <div className={`w-2 h-2 rounded-full ${isHidden ? 'bg-slate-800' : 'bg-blue-500'}`} />}
+                {active && <div className={`w-2 h-2 rounded-full ${isTyping ? 'bg-cyan-500' : isHidden ? 'bg-slate-800' : 'bg-blue-500'}`} />}
               </div>
             </button>
           )
@@ -214,10 +245,12 @@ export function StartScreen({ onStart }: StartScreenProps) {
       </div>
 
       {/* ── Continent picker ─────────────────────────────────────────────────── */}
-      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-        Challenge style
-      </p>
-      <div className="space-y-2.5 mb-8">
+      {mode !== 'flag-typing' && (
+        <>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+            Challenge style
+          </p>
+          <div className="space-y-2.5 mb-8">
         {CHALLENGES.map(item => {
           const active = challenge === item.value
           const isSimilar = item.value === 'similar-flags'
@@ -285,7 +318,9 @@ export function StartScreen({ onStart }: StartScreenProps) {
             </button>
           )
         })}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* "All Regions" is full-width and visually separate from the 5 continent
           buttons below it — making the hierarchy All > Specific clear at a glance.

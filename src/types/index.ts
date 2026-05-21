@@ -15,6 +15,8 @@ export interface Question {
 
 export type QuizMode = 'name-to-flag' | 'flag-to-name' | 'hidden-flag'
 
+export type MenuMode = QuizMode | 'flag-typing'
+
 export type QuizChallenge = 'standard' | 'similar-flags'
 
 export type HiddenFlagDifficulty = 'easy' | 'medium' | 'hard'
@@ -64,7 +66,7 @@ export type GamePhase = 'start' | 'playing' | 'finished'
 
 // Top-level screen that App.tsx owns — separate from the quiz's GamePhase.
 // Adding a new screen: add it here + one case in App.tsx JSX. Nothing else changes.
-export type AppScreen = 'menu' | 'quiz' | 'settings'
+export type AppScreen = 'menu' | 'quiz' | 'typing' | 'settings'
 
 export interface QuizState {
   phase: GamePhase
@@ -83,4 +85,19 @@ export interface QuizConfig {
   mode: QuizMode
   challenge: QuizChallenge
   difficulty: 'common' | 'all'
+}
+
+export interface TypingChallengeConfig {
+  totalFlags: number
+  continents: Continent[] | 'all'
+  difficulty: 'common' | 'all'
+}
+
+export interface TypingChallengeState {
+  phase: GamePhase
+  countries: Country[]
+  solvedCodes: Record<string, number>
+  startedAt: number | null
+  completedAt: number | null
+  totalFlags: number
 }
