@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth scroll for the whole page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Quiz card enter animation ───────────────────────────────────────────────
+   Applied to the wrapper div via the .card-enter class.
+   The `key` prop on that div causes React to unmount/remount it on each new
+   question, which restarts this animation from scratch automatically.
+
+   Duration matches TIMING.CARD_ENTER_MS (200ms).
+   cubic-bezier(0.25, 0.46, 0.45, 0.94) = smooth ease-out (iOS standard curve).
+   fill-mode: backwards — element starts at the `from` keyframe values
+   immediately (opacity-0), preventing a single-frame flash of opacity-1. */
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card-enter {
+  animation: cardEnter 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
+
+/* ── Confirm modal enter animation ───────────────────────────────────────────
+   Applied to the modal panel via .modal-enter.
+   The backdrop is rendered conditionally — mounting triggers this animation. */
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-enter {
+  animation: modalEnter 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+}
